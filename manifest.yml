@@ -1,0 +1,5 @@
+---
+applications:
+- name: admiring-bartik
+  memory: 512M
+  instances: 1

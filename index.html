@@ -1,0 +1,314 @@
+<!doctype html>
+<!-- Nur Bakan 761313, Lucas Lawitschka 762365  -->
+<head>
+    <title>Socket.IO chat from Nur Bakan and Lucas Lawitschka</title>
+
+    <style>
+        body{
+            background: lightgray;
+        }
+        #container{
+            width: 600px;
+            margin: 0 auto;
+        }
+        #chatWindow {
+            height: 450px;
+            width: 350px;
+            overflow-x:scroll;
+            overflow-y:scroll;
+        }
+        #mainWraper{
+            display: none;
+        }
+        #chatWraper{
+            float: left;
+            border: aqua;
+            border-radius: 10px;
+            background: aquamarine;
+            padding: 10px;
+        }
+        #userWraper{
+            float: left;
+            border: green;
+            border-radius: 10px;
+            background: aquamarine;
+            padding: 10px;
+            margin-left: 20px;
+            width: 150px;
+            max-height: 200px;
+            display:none;
+        }
+        #namesWraper{
+            float: left;
+            border: aqua;
+            border-radius: 10px;
+            background: aquamarine;
+            padding: 10px;
+            margin-left: 20px;
+        }
+        input{
+            height: 30px;
+            border: solid 1px #CCC;
+        }
+        .error{
+            color: red;
+        }
+        .whisper{
+            color: gray;
+        }
+
+        .mood{
+            color: blue;
+        }
+        #upload{
+            position: absolute;
+            top: 550px;
+        }
+        #commands{
+            position: absolute;
+            left: 10px;
+            border: aqua;
+            border-radius: 10px;
+            background: aquamarine;
+        }
+    </style>
+</head>
+<body>
+
+<!--
+Login-form for the user to login. It requires a username. If submit is pressed it calls its function
+to check the name and to connect the user to the chat. It will disappear after connecting to the chat area.
+-->
+<div id="container">
+    <div id="namesWraper">
+        <p>Create Username:</p>
+        <div id="error"></div>
+        <form id="usernameForm">
+            <input type="text" size="35" id="username" autocomplete="off" required>
+            <input type="submit" value="Login">
+        </form>
+    </div>
+
+    <!--
+    Chat area. The user has a chat-form where he can either send a message, a private message or request a list of
+    all connected users.
+    -->
+    <div id="mainWraper">
+        <div id="chatWraper" >
+            <form id="messageForm">
+                <input type="text" size="35" id="message" autocomplete="off" placeholder="Chat with your buddies..." required>
+                <input type="submit" value="Submit">
+            </form>
+            <div id="chatWindow">
+            </div>
+        </div>
+
+        <!--
+        its for the list of all users. He can request it by choice ("/list", "/listoff")
+        -->
+        <div id="userWraper">
+            <div id="users"></div>
+        </div>
+
+        <!--
+        Its for uploading and sharing a multimedia file. The user needs to choose the file and to press submit to confirm
+        the upload. He can choose a user he wants to send it to.
+        -->
+        <div id="upload">
+            <form id="UploadForm" action="/upload" method="POST" enctype="multipart/form-data">
+                <select name="selectall" id="selectall"></select>
+                <input type="file" name="UploadedFile" id="photo" required>
+                <input type="submit" value="Upload">
+            </form>
+        </div>
+
+
+        <!--
+        It's a list for all the commands the chat server can handle.
+        -->
+        <div id="commands">
+            <br>
+            <strong>/w [name]</strong> to whisper to someone <br>
+            <strong>/list</strong> to see a list of all online users <br>
+            <strong>/listoff</strong> to let the list disappear <br>
+            <br>
+        </div>
+    </div>
+
+</div>
+
+
+<script src="http://code.jquery.com/jquery-latest.min.js"></script>
+<script src="/socket.io/socket.io.js"></script>
+<script src="//ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js">  </script>
+<script scr="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.100.2/js/materialize.min.js"></script>
+
+<script>
+    /**
+     * Every function the server has to offer.
+     */
+    $(function() {
+        var socket = io.connect();
+        var $messageForm = $('#messageForm'); //Variable for the message-form
+        var $message = $('#message'); //Variable for the message
+        var $chat = $('#chatWindow'); //Variable for the chat Window
+        var $usernameForm = $('#usernameForm'); //Variable for the Username-form
+        var $users = $('#users'); //Variable for the users
+        var $username = $('#username'); //Variable for the usernames
+        var $error = $('#error'); //Variable for the an error
+        var $selectall = $('#selectall');
+
+
+        /**
+         * function is called when a user filled out the login-form and pressed the submit button.
+         * If the username is already taken the user gets a notification and needs to choose a new username.
+         * Otherwise the username the function for a new user is called where the username gets saved and the user-form
+         * will disappear and the chat area appears.
+         *
+         * @param data if true when the username is saved without a problem. Otherwise its false.
+         */
+        $usernameForm.submit(function (e) {
+            e.preventDefault();
+            console.log("Username Submitted");
+            socket.emit('new user', $username.val(), function (data) {
+                if(data){
+                    $('#namesWraper').hide();
+                    $('#mainWraper').show();
+                }else{
+                    $error.html('Username is already taken or invalid username. Try a different one.');
+                }
+            });
+        });
+
+        /**
+         * its for update the username-list. When someone connects to or disconnects from the chat it will update the list, so the user can
+         * see it, if he wants. Also updates the options for sending a file.
+         * @param data contains every connected username.
+         */
+        socket.on('usernames', function (data) {
+            var html = '';
+            var selectUsers= '<option>1. Send it to everyone</option>';
+
+            for(i=0; i<data.names.length; i++){
+                html += data.names[i] + ' <a class="mood"> '+ data.moods[i] + '</a><br>';
+                selectUsers += '<option>' + (i + 2) + ". " + data.names[i] + '</option>';
+            }
+            $users.html(html);
+            $selectall.html(selectUsers);
+        })
+
+        /**
+         * broadcasts a message to everyone that is connected to the chat, when a user connects to the server.
+         * @param data contains the name of the user that is connected to the server.
+         */
+        socket.on('user connect', function (data) {
+            $chat.append(data + ' has connected to the chat' + '<br>');
+        })
+
+        /**
+         * broadcasts a message to everyone that is connected to the chat, when a user disconnects to the server.
+         *
+         * @param data contains the name of the user that is disconnected from the server.
+         */
+        socket.on('user disconnect', function (data) {
+            $chat.append(data + ' has disconnected from the chat' + '<br>');
+        })
+
+
+        /**
+         * Function is called when a user tries to sends a message in the chat area and presses the submit button of the message-form.
+         * A message needs to be atleast 1 character.
+         *
+         * @param data contains an error if the message is unvalid.
+         */
+        $messageForm.submit(function (e) {
+            e.preventDefault();
+            console.log("Submitted");
+            socket.emit('send message', $message.val(), function(data){
+                $chat.append('<span class="error">' + data  + '<br>');
+                $('#chat').animate({scrollTop:$(this).height()},"slow");
+
+            });
+            $message.val('');
+        });
+
+        /**
+         * Is called after someone sends a correct message to the chat. Everyone will get the message.
+         *
+         * @param data contains the message everyone will get.
+         */
+        socket.on('new message', function (data){
+            var time = new Date();
+            $chat.append(time.getDate() + '.' + (time.getMonth()+1) + '.' + time.getFullYear() + ' ' + time.getHours() + ':' + time.getMinutes() + ' ' +
+                '<strong>' +  data.user +': </strong>' + data.msg + '<br>');
+            $(".chat").scrollTop= $(".chat").scrollHeight;
+        });
+
+        /**
+         * Is called after someone sends a correct message to the only one user by whispering. Only the choosen user will get the message.
+         *
+         * @param data contains the message the user will get.
+         */
+        socket.on('whisper', function(data){
+            var time = new Date();
+            $chat.append('<span class="whisper">' + time.getDate() + '.' + (time.getMonth()+1) + '.'
+                + time.getFullYear() + ' ' + time.getHours() + ':' + time.getMinutes() + ' '  + '<strong>' + data.user +':'  +  '</strong>' + '</span>' + data.msg + '<br>');
+            $(".chat").scrollTop= $(".chat").scrollHeight;
+        });
+
+        /**
+         * Is called after someone uploads and shares a correct image. Everyone will get the image.
+         *
+         * @param data contains the path of the file.
+         */
+        socket.on('img upload', function(data){
+            var time = new Date();
+            $chat.append((time.getDate() + '.' + (time.getMonth()+1) + '.' + time.getFullYear() + ' '
+                + time.getHours() + ':' + time.getMinutes() + ' ' + "<br>" + "<img width='160' height='120' src='" + data.file + "'> <br>"));
+            $('#chat').scrollTop($('#chat')[0].scrollHeight);
+        });
+
+        /**
+         * Is called after someone uploads and shares a correct video. Everyone will get the video.
+         *
+         * @param data contains the path of the file.
+         */
+        socket.on('video upload', function(data){
+            var time = new Date();
+            $chat.append(time.getDate() + '.' + (time.getMonth()+1) + '.' + time.getFullYear() + ' '
+                + time.getHours() + ':' + time.getMinutes() + ' ' +': </strong>' + "<br>" + "<video width='160' height='120' src='" + data.file + "' controls> <br>");
+            $('#chat').scrollTop($('#chat')[0].scrollHeight);
+        });
+
+        /**
+         * Is called after someone uploads and shares a correct soundfile. Everyone will get the soundfile.
+         *
+         * @param data contains the path of the file.
+         */
+        socket.on('sound upload', function(data){
+            var time = new Date();
+            $chat.append(time.getDate() + '.' + (time.getMonth()+1) + '.' + time.getFullYear() + ' '
+                + time.getHours() + ':' + time.getMinutes() + ' ' +': </strong>' + "<br>" + "<sound width='160' height='20' src='" + data.file + "' controls> <br>");
+            $('#chat').scrollTop($('#chat')[0].scrollHeight);
+        });
+
+        /**
+         * Function is called when a user sends "/list" via the message-form. The userWraper will appear, containing
+         * every username that is connected to the chat. Only the one who wanted the list will see the list.
+         */
+        socket.on('liston', function(){
+            $('#userWraper').show();
+        });
+
+        /**
+         * Function is called when a user sends "/listoff" via the message-form. The userWraper will disappear and
+         * every username that is connected to the chat will disappear with it. It will only disappear for the one who wanted the list to disappear.
+         */
+        socket.on('listoff', function(){
+            $('#userWraper').hide();
+        });
+    })
+</script>
+
+</body>
+</html>
