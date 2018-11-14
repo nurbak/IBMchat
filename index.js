@@ -14,10 +14,7 @@ require('dotenv').config({silent: true});
 
 // Create the service wrapper
 let toneAnalyzer = new ToneAnalyzerV3({
-    version_date: '2017-09-21',
-    username: 'aa9742c6-e129-45be-a628-d51f744e76af',
-    password: 'QUzBsczCdB7S',
-    url: 'https://gateway-fra.watsonplatform.net/tone-analyzer/api'
+    version_date: '2017-09-21'
 });
 
 
