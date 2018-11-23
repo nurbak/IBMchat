@@ -3,6 +3,15 @@
 var express = require('express'), app=express();
 var server = require('http').createServer(app);
 var io = require('socket.io').listen(server);
+var db = require( 'ibm_db' );
+
+//ibm
+var connStr = 'DRIVER={DB2};' +
+    'HOSTNAME=dashdb-txn-sbox-yp-lon02-01.services.eu-gb.bluemix.net;' +
+    'PORT=50000;' +
+    'DATABASE=BLUDB;' +
+    'UID=vfm40570;' +
+    'PWD=0b7hhr^qmtmzck5l';
 
 
 //ibm
@@ -107,6 +116,21 @@ console.log('Server running...');
  */
 io.sockets.on('connection', function(socket){
     console.log('Socket Connected...');
+
+    //IBM
+    db.open(connStr, function (err,conn) {
+        if (err) return console.log(err);
+
+        var sql = "INSERT INTO Passwort (UNAME, PASSWORT) VALUES ('Nur','Nur123')";
+        conn.query(sql, function (err, data) {
+            if (err) console.log(err);
+            else console.log(data);
+
+            conn.close(function () {
+                console.log('done');
+            });
+        });
+    });
 
 
     /**
