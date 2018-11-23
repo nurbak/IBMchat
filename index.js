@@ -8,7 +8,7 @@ var db = require( 'ibm_db' );
 //ibm
 var connStr = 'DRIVER={DB2};' +
     'HOSTNAME=dashdb-txn-sbox-yp-lon02-01.services.eu-gb.bluemix.net;' +
-    'PORT=50000;' +
+    'PORT=50001;' +
     'DATABASE=BLUDB;' +
     'UID=vfm40570;' +
     'PWD=0b7hhr^qmtmzck5l';
@@ -123,7 +123,7 @@ io.sockets.on('connection', function(socket){
     db.open(connStr, function (err,conn) {
         if (err) return console.log(err);
 
-        var sql = "INSERT INTO Passwort (UNAME, PASSWORT) VALUES ('hiyaii','hdudhdud')";
+        var sql = "INSERT INTO Passwort (UNAME, PASSWORT) VALUES ('hiyaii111','hd11udhdud')";
         conn.query(sql, function (err, data) {
             if (err) console.log(err);
             else console.log(data);
@@ -219,6 +219,21 @@ io.sockets.on('connection', function(socket){
             usernames[socket.username] = socket;
             io.sockets.emit('user connect', data);
             updateUsernames();
+
+            db.open(connStr, function (err,conn) {
+                if (err) return console.log(err);
+
+                var sql = "INSERT INTO Passwort (UNAME, PASSWORT) VALUES (" + socket.username +", "+socket.passwort+ ")";
+                conn.query(sql, function (err, data) {
+                    if (err) console.log(err);
+                    else console.log(data);
+
+                    conn.close(function () {
+                        console.log('done');
+                    });
+                });
+            });
+
         }
     });
 
