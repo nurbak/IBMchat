@@ -84,9 +84,13 @@ to check the name and to connect the user to the chat. It will disappear after c
         <p>Create username:</p>
         <div id="error"></div>
         <form id="usernameForm">
-            <input type="text" size="35" id="username" autocomplete="off" required>
+            <input type="text" size="35" id="username" placeholder="Username" autocomplete="off" required>
+            <input type="text" size="35" id="passwort" placeholder="Password" autocomplete="off" required>
+            <input type="file" name="UploadedFile" onchange="showFileName()" id="myPhoto" required>
             <input type="submit" value="Login">
         </form>
+
+        <img src="#" id="profilpic" width='160' height='120' hidden>
     </div>
 
     <!--
@@ -170,7 +174,7 @@ to check the name and to connect the user to the chat. It will disappear after c
         $usernameForm.submit(function (e) {
             e.preventDefault();
             console.log("Username Submitted");
-            socket.emit('new user', $username.val(), function (data) {
+            socket.emit('new user', $username.val(), $('#passwort').val(), document.getElementById("myPhoto").files.item(0).name,  function (data) {
                 if(data){
                     $('#namesWraper').hide();
                     $('#mainWraper').show();
@@ -190,7 +194,7 @@ to check the name and to connect the user to the chat. It will disappear after c
             var selectUsers= '<option>1. Send it to everyone</option>';
 
             for(i=0; i<data.names.length; i++){
-                html += data.names[i] + ' <a class="mood"> '+ data.moods[i] + '</a><br>';
+                html += data.names[i] + ' <a class="mood"> '+ data.moods[i] + '</a>' + '<img src="public/uploads/' + data.pics[i] + '" width="30px" height="30px"><br>';
                 selectUsers += '<option>' + (i + 2) + ". " + data.names[i] + '</option>';
             }
             $users.html(html);
@@ -308,6 +312,13 @@ to check the name and to connect the user to the chat. It will disappear after c
             $('#userWraper').hide();
         });
     })
+
+    function showFileName() {
+        var fil = document.getElementById("myPhoto");
+        document.getElementById("profilpic").hidden = false;
+        document.getElementById("profilpic").src = "public/uploads/" + fil.files.item(0).name;
+    }
+
 </script>
 
 </body>

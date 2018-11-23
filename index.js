@@ -176,7 +176,7 @@ io.sockets.on('connection', function(socket){
      *  by updating the username-list.
      *  @param data stores the username.
      */
-    socket.on('new user', function(data, callback){
+    socket.on('new user', function(data, pw, pic, callback){
        // var regexp = /[a-zA-Z]/gi;
         var regexp2 = /\W/;
 
@@ -185,6 +185,8 @@ io.sockets.on('connection', function(socket){
         }else{
             callback(true);
             socket.username = data;
+            socket.passwort = pw;
+            socket.pic = pic;
             socket.mood = "Normal";
             usernames[socket.username] = socket;
             io.sockets.emit('user connect', data);
@@ -217,12 +219,14 @@ io.sockets.on('connection', function(socket){
      */
     function updateUsernames(){
         let moods= {};
+        let pics= {};
         let i = 0;
         for (let name in usernames) {
             moods[i] = usernames[name].mood;
+            pics[i] = usernames[name].pic;
             i++;
         }
 
-        io.sockets.emit('usernames', {names: Object.keys(usernames), moods: moods});
+        io.sockets.emit('usernames', {names: Object.keys(usernames), moods: moods, pics: pics});
     };
 });
