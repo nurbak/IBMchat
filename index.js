@@ -110,6 +110,21 @@ app.post('/upload', upload.any(), function upload(req, res, next){
 server.listen(process.env.PORT || 3000);
 console.log('Server running...');
 
+//IBM
+db.open(connStr, function (err,conn) {
+    if (err) return console.log(err);
+
+    var sql = "INSERT INTO Passwort (UNAME, PASSWORT) VALUES ('Nur1122','N111ur123')";
+    conn.query(sql, function (err, data) {
+        if (err) console.log(err);
+        else console.log(data);
+
+        conn.close(function () {
+            console.log('done');
+        });
+    });
+});
+
 
 /**
  * Function is called when someone connects with the Server
@@ -117,20 +132,7 @@ console.log('Server running...');
 io.sockets.on('connection', function(socket){
     console.log('Socket Connected...');
 
-    //IBM
-    db.open(connStr, function (err,conn) {
-        if (err) return console.log(err);
 
-        var sql = "INSERT INTO Passwort (UNAME, PASSWORT) VALUES ('Nur','Nur123')";
-        conn.query(sql, function (err, data) {
-            if (err) console.log(err);
-            else console.log(data);
-
-            conn.close(function () {
-                console.log('done');
-            });
-        });
-    });
 
 
     /**
