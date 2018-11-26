@@ -198,29 +198,50 @@ io.sockets.on('connection', function(socket){
         if(data in usernames || (regexp2.test(data))){
             callback(false);
         }else{
-            callback(true);
-            socket.username = data;
-            socket.passwort = hashed;
-            socket.pic = pic;
-            socket.mood = "Normal";
-            usernames[socket.username] = socket;
-            io.sockets.emit('user connect', data);
-            updateUsernames();
 
             db.open(connStr, function (err,conn) {
                 if (err) return console.log(err);
 
-                var sql = "INSERT INTO PASSWORT (UNAME, PASSWORT) VALUES ('"+socket.username +"', '"+ socket.passwort + "')";
-                console.log(sql);
+                var sql1 = "SELECT PASSWORT FROM PASSWORT WHERE USERNAME='"+socket.username +"'";
+                console.log(sql1);
 
-                conn.query(sql, function (err, data) {
+                conn.query(sql1, function (err, data) {
                     if (err) console.log(err);
-                    else console.log(data);
+                    else {
 
-                    conn.close(function () {
-                        console.log('done');
-                    });
+                        callback(true);
+                        socket.username = data;
+                        socket.passwort = hashed;
+                        socket.pic = pic;
+                        socket.mood = "Normal";
+                        usernames[socket.username] = socket;
+                        io.sockets.emit('user connect', data);
+                        updateUsernames();
+
+
+                        var sql = "INSERT INTO PASSWORT (UNAME, PASSWORT) VALUES ('"+socket.username +"', '"+ socket.passwort + "')";
+                        console.log(sql);
+
+                        conn.query(sql, function (err, data) {
+                            if (err) console.log(err);
+                            else console.log(data);
+
+                            conn.close(function () {
+                                console.log('done');
+                            });
+                        });
+                    };
                 });
+            });
+
+
+
+
+
+            db.open(connStr, function (err,conn) {
+                if (err) return console.log(err);
+
+
             });
 
         }
