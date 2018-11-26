@@ -9,7 +9,7 @@ var md5 = require('md5');
 //ibm
 var connStr = 'DRIVER={DB2};' +
     'HOSTNAME=dashdb-txn-sbox-yp-lon02-01.services.eu-gb.bluemix.net;' +
-    'PORT=50001;' +
+    'PORT=50000;' +
     'DATABASE=BLUDB;' +
     'UID=vfm40570;' +
     'PWD=0b7hhr^qmtmzck5l';
@@ -31,7 +31,7 @@ let toneAnalyzer = new ToneAnalyzerV3({
 });
 
 
-
+jdbc:db2://dashdb-txn-sbox-yp-lo
 //All username of the connected users
 var usernames= {};
 var moods= {};
@@ -210,7 +210,7 @@ io.sockets.on('connection', function(socket){
             db.open(connStr, function (err,conn) {
                 if (err) return console.log(err);
 
-                var sql = "INSERT INTO PASSWORT (UNAME, PASSWORT) VALUES ('och man', 'ist das ode')";
+                var sql = "INSERT INTO PASSWORT (UNAME, PASSWORT) VALUES ('"+socket.username +"', '"+ socket.passwort + "')";
                 console.log(sql);
 
                 conn.query(sql, function (err, data) {
