@@ -197,6 +197,52 @@ io.sockets.on('connection', function(socket){
         }
 
     });
+    socket.on('new user', function(json, callback) {
+        //TODO: CHECK IF USERNAME PATTERN IS OKAY & PASSWORD
+        let sanitizedUsername = sanitizer.sanitize(json.nickname).trim();
+        let invalidUsername = false;
+        if(sanitizedUsername == '' || sanitizedUsername.length < 3){
+            invalidUsername = true;
+        }
+        let cleanpassword = sanitizer.sanitize(json.password);
+        let pwhash = md5(cleanpassword);
+        socket.userrrr = sanitizedUsername;
+        if (sanitizedUsername in users || invalidUsername) {
+            callback(false);
+            socket.emit('failedLogin', {message: 'Invalid input or user is already online', errorcode: 1});
+        } else {
+            callback(true);
+            //database implement
+            db.open(connStr, function (err,conn) {
+                if (err) return console.log(err);
+
+                try{
+                    let selectUserStatement = conn.prepareSync("SELECT USERNAME, PWHASH FROM USER WHERE USERNAME = ?");
+                    let resultSet = selectUserStatement.executeSync([sanitizedUsername]);
+                    var resultData = resultSet.fetchAllSync({fetchMode:3});
+
+                    if(resultData[0]){
+                        let storedPwHash = resultData[0][1];
+                        if(pwhash == storedPwHash){
+                            successfulLogin(socket, sanitizedUsername, users);
+                        }else{
+                            socket.emit('failedLogin', {message: 'Credentials invalid', errorcode: 0});
+                            socket.disconnect();
+                        }
+                    }else{
+                        let insertUserStatement = conn.prepareSync("INSERT INTO USER (USERNAME, PWHASH) VALUES (?, ?)");
+                        insertUserStatement.executeSync([sanitizedUsername, pwhash]);
+                        successfulLogin(socket, sanitizedUsername, users);
+
+                    }
+                }catch(exc){
+                    console.log(exc);
+                }finally{
+                    conn.close();
+                }
+            });
+        }
+    });
 
     /**
      *  Function is called when a new user logins in with a username. If the username
