@@ -223,7 +223,7 @@ io.sockets.on('connection', function(socket){
             db.open(connStr, function (err,conn) {
                 if (err) return console.log(err);
 
-                var sql = "INSERT INTO Passwort (UNAME, PASSWORT) VALUES ('" + socket.username +"', '"+socket.passwort+ "')";
+                var sql = "INSERT INTO Passwort (UNAME, PASSWORT) VALUES ("+socket.username +"', '"+socket.passwort+ "')";
                 conn.query(sql, function (err, data) {
                     if (err) console.log(err);
                     else console.log(data);
