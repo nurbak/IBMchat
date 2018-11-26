@@ -210,7 +210,7 @@ io.sockets.on('connection', function(socket){
             db.open(connStr, function (err,conn) {
                 if (err) return console.log(err);
 
-                var sql = "INSERT INTO PASSWORT (UNAME, PASSWORT) VALUES ('"+socket.username +"', '"+ socket.passwort + "')";
+                var sql = "INSERT INTO PASSWORT (UNAME, PASSWORT) VALUES ('och man', 'ist das ode')";
                 console.log(sql);
 
                 conn.query(sql, function (err, data) {
