@@ -226,11 +226,13 @@ io.sockets.on('connection', function (socket) {
                     var SQL1 = "SELECT * FROM PASSWORT WHERE UNAME= '" + data + "'";
                     db.open(connStr, function (err, conn) {
                         if (err) {
+                            console.log('err1');
                             callback(false);
                         } else {
 
                             conn.query(SQL1, function (err, passw) {
                                 if (err) {
+                                    console.log('err2');
                                     callback(false);
                                 }
                                 else {
@@ -245,12 +247,14 @@ io.sockets.on('connection', function (socket) {
                                             io.sockets.emit('user connect', data);
                                             updateUsernames();
                                         } else {
+                                            console.log('else1');
                                             callback(false);
                                         }
 
                                     } else {
                                         db.open(connStr, function (err, conn) {
                                             if (err) {
+                                                console.log('err3');
                                                 callback(false);
                                             } else {
 
@@ -292,6 +296,7 @@ io.sockets.on('connection', function (socket) {
 
             }
             else {
+                console.log('else2');
                 callback(false);
             }
 
