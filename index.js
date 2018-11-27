@@ -213,6 +213,7 @@ io.sockets.on('connection', function (socket) {
         var regexp2 = /\W/;
         let hashed = md5(pw);
         var temp = false;
+        var anlegen = false;
 
         detectFace(pic).then((result) => {
             if (validPic) {
@@ -241,22 +242,7 @@ io.sockets.on('connection', function (socket) {
                                     }
 
                                 } else {
-                                   db.open(connStr, function (err, conn) {
-                                                    if (err) return console.log(err);
-
-                                                    var sql = "INSERT INTO PASSWORT (UNAME, PASSWORT) VALUES ('" + data + "', '" + hashed + "')";
-                                                    console.log(sql);
-
-                                                    conn.query(sql, function (err, data) {
-                                                        if (err) console.log(err);
-                                                        else console.log(data);
-
-                                                        conn.close(function () {
-                                                            console.log('done1');
-                                                temp = true;
-                                            });
-                                        });
-                                    });
+                                    anlegen=true;
                                 }
                             }
                             conn.close(function () {
@@ -265,6 +251,26 @@ io.sockets.on('connection', function (socket) {
                             });
                         });
                     });
+
+
+                    if(anlegen) {
+                        db.open(connStr, function (err, conn) {
+                            if (err) return console.log(err);
+
+                            var sql = "INSERT INTO PASSWORT (UNAME, PASSWORT) VALUES ('" + data + "', '" + hashed + "')";
+                            console.log(sql);
+
+                            conn.query(sql, function (err, data) {
+                                if (err) console.log(err);
+                                else console.log(data);
+
+                                conn.close(function () {
+                                    console.log('done1');
+                                    temp = true;
+                                });
+                            });
+                        });
+                    }
 
                     if (temp) {
                         callback(true);
