@@ -236,7 +236,7 @@ io.sockets.on('connection', function (socket) {
                                     callback(false);
                                 }
                                 else {
-                                    if (user.length > 0) {
+                                    if (passw.length > 0) {
                                         if (hashed == passw) {
                                             callback(true);
                                             socket.username = data;
@@ -261,7 +261,7 @@ io.sockets.on('connection', function (socket) {
                                                 var sql = "INSERT INTO PASSWORT (UNAME, PASSWORT) VALUES ('" + data + "', '" + hashed + "')";
                                                 console.log(sql);
 
-                                                conn.query(sql, function (err, data) {
+                                                conn.query(sql, function (err, ret) {
                                                     if (err){
                                                         callback(false);
                                                     }
