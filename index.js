@@ -223,7 +223,7 @@ io.sockets.on('connection', function (socket) {
                     callback(false);
                 } else {
 
-                    var SQL1 = "SELECT * FROM PASSWORT WHERE UNAME= '" + data + "'";
+                    var SQL1 = "SELECT PASSWORT FROM PASSWORT WHERE UNAME= '" + data + "'";
                     db.open(connStr, function (err, conn) {
                         if (err) {
                             console.log('err1');
