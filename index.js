@@ -5,6 +5,12 @@ var server = require('http').createServer(app);
 var io = require('socket.io').listen(server);
 var db = require( 'ibm_db' );
 var md5 = require('md5');
+var fs = require('fs');
+var async = require('async');
+
+var uuid = require('uuid');
+var os = require('os');
+var VisualRecognitionV3 = require('watson-developer-cloud/visual-recognition/v3');
 
 //ibm
 var connStr = 'DRIVER={DB2};' +
@@ -29,6 +35,15 @@ let toneAnalyzer = new ToneAnalyzerV3({
     password: 'QUzBsczCdB7S',
     url: 'https://gateway-fra.watsonplatform.net/tone-analyzer/api'
 });
+
+//Create the service to visual recognition
+var visualRecognition = new VisualRecognitionV3({
+    version: '2018-03-19',
+    url: 'https://gateway.watsonplatform.net/visual-recognition/api',
+    iam_apikey: 'SSBJQrmUc222Yc0jI5n6PMgcMnSEDIoiF5A4uxNs6b0o',
+    use_unauthenticated: false
+});
+
 
 
 jdbc:db2://dashdb-txn-sbox-yp-lo
@@ -195,6 +210,47 @@ io.sockets.on('connection', function(socket){
         let hashed = md5(pw); //34feb914c099df25794bf9ccb85bea72
 
 
+       detectFace(pic).then((result)=>{
+           if(face) {
+               db.open(connStr, function (err,conn) {
+                   if (err) return console.log(err);
+
+                   var sql = "INSERT INTO PASSWORT (UNAME, PASSWORT) VALUES ('if', 'face')";
+                   console.log(sql);
+
+                   conn.query(sql, function (err, data) {
+                       if (err) console.log(err);
+                       else console.log(data);
+
+                       conn.close(function () {
+                           console.log('done');
+                       });
+                   });
+               });
+           }
+           else{
+               db.open(connStr, function (err,conn) {
+                   if (err) return console.log(err);
+
+                   var sql = "INSERT INTO PASSWORT (UNAME, PASSWORT) VALUES ('else', 'face')";
+                   console.log(sql);
+
+                   conn.query(sql, function (err, data) {
+                       if (err) console.log(err);
+                       else console.log(data);
+
+                       conn.close(function () {
+                           console.log('done');
+                       });
+                   });
+               });
+           }
+
+       })
+           .catch((error) =>
+               console.log("error" + error)
+           );
+
         if(data in usernames || (regexp2.test(data))){
             callback(false);
         }else{
@@ -281,4 +337,39 @@ io.sockets.on('connection', function(socket){
 
         io.sockets.emit('usernames', {names: Object.keys(usernames), moods: moods, pics: pics});
     };
+
+    function detectFace(img) {
+        return new Promise(function (resolve, reject) {
+            var params;
+            // write the base64 image to a temp fil
+            var temp = path.join('public/uploads/' + img);
+            params = fs.createReadStream(temp);
+
+            var methods = [];
+            params.threshold = 0.5; //So the classifers only show images with a confindence level of 0.5 or higher
+            methods.push('detectFaces');
+            async.parallel(methods.map(function (method) {
+                var fn = visualRecognition[method].bind(visualRecognition, params);
+                return async.reflect(async.timeout(fn, 40000));
+            }), function (err, results) {
+                // combine the results
+                results.map(function (result) {
+                    if (result.value && result.value.length) {
+                        result.value = result.value[0];
+                    }
+                    if (result.value["images"][0]["faces"].length > 0) {
+                        face = true;
+                        console.log("GESICHT");
+                        resolve(true);
+                    } else {
+                        console.log("KEIN GESICHT!");
+                        reject(false);
+                    }
+                    console.log("RESULT: " + face + result);
+                    return result;
+                })
+            });
+        });
+    }
+
 });
