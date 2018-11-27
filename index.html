@@ -85,7 +85,7 @@ to check the name and to connect the user to the chat. It will disappear after c
         <div id="error"></div>
         <form id="usernameForm">
             <input type="text" size="35" id="username" placeholder="Username" autocomplete="off" required>
-            <input type="text" size="35" id="passwort" placeholder="Password" autocomplete="off" required>
+            <input type="password" size="35" id="passwort" placeholder="Password" autocomplete="off" required>
             <input type="file" name="UploadedFile" onchange="showFileName()" id="myPhoto" required>
             <input type="submit" value="Login">
         </form>
@@ -179,7 +179,7 @@ to check the name and to connect the user to the chat. It will disappear after c
                     $('#namesWraper').hide();
                     $('#mainWraper').show();
                 }else{
-                    $error.html('Username is already taken or invalid username. Try a different one.');
+                    $error.html('Username is already taken or invalid username or invalid picture. Try a different one.');
                 }
             });
         });

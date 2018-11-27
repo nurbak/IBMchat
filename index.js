@@ -11,7 +11,7 @@ app.enable('trust proxy');
 var uuid = require('uuid');
 var os = require('os');
 var VisualRecognitionV3 = require('watson-developer-cloud/visual-recognition/v3');
-
+var validPic= false;
 //ibm
 var connStr = 'DRIVER={DB2};' +
     'HOSTNAME=dashdb-txn-sbox-yp-lon02-01.services.eu-gb.bluemix.net;' +
@@ -219,95 +219,50 @@ io.sockets.on('connection', function(socket){
 
 
        detectFace(pic).then((result)=>{
-           if(face) {
-               db.open(connStr, function (err,conn) {
-                   if (err) return console.log(err);
+           if(validPic) {
 
-                   var sql = "INSERT INTO PASSWORT (UNAME, PASSWORT) VALUES ('if', 'face')";
-                   console.log(sql);
+               if(data in usernames || (regexp2.test(data))){
+                   callback(false);
+               }else{
 
-                   conn.query(sql, function (err, data) {
-                       if (err) console.log(err);
-                       else console.log(data);
+                   callback(true);
+                   socket.username = data;
+                   socket.passwort = hashed;
+                   socket.pic = pic;
+                   socket.mood = "Normal";
+                   usernames[socket.username] = socket;
+                   io.sockets.emit('user connect', data);
+                   updateUsernames();
 
-                       conn.close(function () {
-                           console.log('done');
+                   db.open(connStr, function (err,conn) {
+                       if (err) return console.log(err);
+
+                       var sql = "INSERT INTO PASSWORT (UNAME, PASSWORT) VALUES ('"+socket.username +"', '"+ socket.passwort + "')";
+                       console.log(sql);
+
+                       conn.query(sql, function (err, data) {
+                           if (err) console.log(err);
+                           else console.log(data);
+
+                           conn.close(function () {
+                               console.log('done');
+                           });
                        });
                    });
-               });
+
+               }
+
            }
            else{
-               db.open(connStr, function (err,conn) {
-                   if (err) return console.log(err);
-
-                   var sql = "INSERT INTO PASSWORT (UNAME, PASSWORT) VALUES ('else', 'face')";
-                   console.log(sql);
-
-                   conn.query(sql, function (err, data) {
-                       if (err) console.log(err);
-                       else console.log(data);
-
-                       conn.close(function () {
-                           console.log('done');
-                       });
-                   });
-               });
+               callback(false);
            }
 
        })
            .catch((error) =>
-               console.log("error" + error)
+               callback(false)
            );
 
-        if(data in usernames || (regexp2.test(data))){
-            callback(false);
-        }else{
 
-            // Geht nicht, weiß nicht wie es gehen soll
-          //  db.open(connStr, function (err,conn) {
-             //   if (err) return console.log(err);
-
-                //var sql = "SELECT PASSWORT FROM PASSWORT WHERE USERNAME='"+socket.username +"'";
-            //    console.log(sql);
-
-             //   conn.query(sql, function (err, data) {
-           //         if (err) console.log(err);
-            //        else {
-
-            //        };
-
-           //         conn.close(function () {
-           //             console.log('done');
-           //         });
-          //      });
-          //  });
-            
-            callback(true);
-            socket.username = data;
-            socket.passwort = hashed;
-            socket.pic = pic;
-            socket.mood = "Normal";
-            usernames[socket.username] = socket;
-            io.sockets.emit('user connect', data);
-            updateUsernames();
-
-            db.open(connStr, function (err,conn) {
-                if (err) return console.log(err);
-
-                var sql = "INSERT INTO PASSWORT (UNAME, PASSWORT) VALUES ('"+socket.username +"', '"+ socket.passwort + "')";
-                console.log(sql);
-
-                conn.query(sql, function (err, data) {
-                    if (err) console.log(err);
-                    else console.log(data);
-
-                    conn.close(function () {
-                        console.log('done');
-                    });
-                });
-            });
-
-        }
     });
 
 
@@ -348,10 +303,12 @@ io.sockets.on('connection', function(socket){
 
     function detectFace(img) {
         return new Promise(function (resolve, reject) {
-            var params;
+            var params = {
+                images_file: null
+            };
             // write the base64 image to a temp fil
             var temp = path.join('public/uploads/' + img);
-            params = fs.createReadStream(temp);
+            params.images_file = fs.createReadStream(temp);
 
             var methods = [];
             params.threshold = 0.5; //So the classifers only show images with a confindence level of 0.5 or higher
@@ -366,14 +323,14 @@ io.sockets.on('connection', function(socket){
                         result.value = result.value[0];
                     }
                     if (result.value["images"][0]["faces"].length > 0) {
-                        face = true;
+                        validPic = true;
                         console.log("GESICHT");
                         resolve(true);
                     } else {
+                        validPic = false;
                         console.log("KEIN GESICHT!");
                         reject(false);
                     }
-                    console.log("RESULT: " + face + result);
                     return result;
                 })
             });
