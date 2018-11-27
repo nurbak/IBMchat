@@ -237,20 +237,42 @@ io.sockets.on('connection', function (socket) {
                                 }
                                 else {
                                     if (passw.length > 0) {
-                                        if (hashed == passw) {
-                                            callback(true);
-                                            socket.username = data;
-                                            socket.passwort = hashed;
-                                            socket.pic = pic;
-                                            socket.mood = "Normal     ";
-                                            usernames[socket.username] = socket;
-                                            io.sockets.emit('user connect', data);
-                                            updateUsernames();
-                                        } else {
-                                            console.log('else1');
-                                            callback(false);
-                                        }
 
+                                        var SQL2 = "SELECT * FROM PASSWORT WHERE UNAME= '" + data + "' AND PASSWORT='" + hashed + "'";
+                                        db.open(connStr, function (err, conn) {
+                                            if (err) {
+                                                console.log('err1');
+                                                callback(false);
+                                            } else {
+                                                conn.query(SQL2, function (err, user) {
+                                                    if (err) {
+                                                        console.log('err2');
+                                                        callback(false);
+                                                    }
+                                                    else {
+                                                        if (user.length > 0) {
+                                                            callback(true);
+                                                            socket.username = data;
+                                                            socket.passwort = hashed;
+                                                            socket.pic = pic;
+                                                            socket.mood = "Normal     ";
+                                                            usernames[socket.username] = socket;
+                                                            io.sockets.emit('user connect', data);
+                                                            updateUsernames();
+                                                        }
+                                                        else{
+                                                            console.log('err2');
+                                                            callback(false);
+                                                        }
+                                                    }
+                                                    conn.close(function () {
+                                                        console.log('done3');
+                                                        temp = true;
+                                                    });
+                                                });
+
+                                            }
+                                        });
                                     } else {
                                         db.open(connStr, function (err, conn) {
                                             if (err) {
@@ -262,7 +284,7 @@ io.sockets.on('connection', function (socket) {
                                                 console.log(sql);
 
                                                 conn.query(sql, function (err, ret) {
-                                                    if (err){
+                                                    if (err) {
                                                         callback(false);
                                                     }
                                                     else {
