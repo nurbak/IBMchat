@@ -226,61 +226,67 @@ io.sockets.on('connection', function (socket) {
                     var SQL1 = "SELECT * FROM PASSWORT WHERE UNAME= '" + data + "'";
                     db.open(connStr, function (err, conn) {
                         if (err) {
-                            return console.log(err);
-                        }
+                            callback(false);
+                        } else {
 
-                        conn.query(SQL1, function (err, passw) {
-                            if (err) {
-                                console.log(err);
-                            }
-                            else {
-                                if (user.length > 0) {
-                                    if (hashed == passw) {
-                                        callback(true);
-                                        socket.username = data;
-                                        socket.passwort = hashed;
-                                        socket.pic = pic;
-                                        socket.mood = "Normal     ";
-                                        usernames[socket.username] = socket;
-                                        io.sockets.emit('user connect', data);
-                                        updateUsernames();
-                                    } else {
-                                        callback(false);
-                                    }
-
-                                } else {
-                                    db.open(connStr, function (err, conn) {
-                                        if (err) return console.log(err);
-
-                                        var sql = "INSERT INTO PASSWORT (UNAME, PASSWORT) VALUES ('" + data + "', '" + hashed + "')";
-                                        console.log(sql);
-
-                                        conn.query(sql, function (err, data) {
-                                            if (err) console.log(err);
-                                            else{
-                                                callback(true);
-                                                socket.username = data;
-                                                socket.passwort = hashed;
-                                                socket.pic = pic;
-                                                socket.mood = "Normal     ";
-                                                usernames[socket.username] = socket;
-                                                io.sockets.emit('user connect', data);
-                                                updateUsernames();
-                                            }
-
-                                            conn.close(function () {
-                                                console.log('done1');
-                                                temp = true;
-                                            });
-                                        });
-                                    });
+                            conn.query(SQL1, function (err, passw) {
+                                if (err) {
+                                    callback(false);
                                 }
-                            }
-                            conn.close(function () {
-                                console.log('done2');
-                                temp = true;
+                                else {
+                                    if (user.length > 0) {
+                                        if (hashed == passw) {
+                                            callback(true);
+                                            socket.username = data;
+                                            socket.passwort = hashed;
+                                            socket.pic = pic;
+                                            socket.mood = "Normal     ";
+                                            usernames[socket.username] = socket;
+                                            io.sockets.emit('user connect', data);
+                                            updateUsernames();
+                                        } else {
+                                            callback(false);
+                                        }
+
+                                    } else {
+                                        db.open(connStr, function (err, conn) {
+                                            if (err) {
+                                                callback(false);
+                                            } else {
+
+                                                var sql = "INSERT INTO PASSWORT (UNAME, PASSWORT) VALUES ('" + data + "', '" + hashed + "')";
+                                                console.log(sql);
+
+                                                conn.query(sql, function (err, data) {
+                                                    if (err){
+                                                        callback(false);
+                                                    }
+                                                    else {
+                                                        callback(true);
+                                                        socket.username = data;
+                                                        socket.passwort = hashed;
+                                                        socket.pic = pic;
+                                                        socket.mood = "Normal     ";
+                                                        usernames[socket.username] = socket;
+                                                        io.sockets.emit('user connect', data);
+                                                        updateUsernames();
+                                                    }
+
+                                                    conn.close(function () {
+                                                        console.log('done1');
+                                                        temp = true;
+                                                    });
+                                                });
+                                            }
+                                        });
+                                    }
+                                }
+                                conn.close(function () {
+                                    console.log('done2');
+                                    temp = true;
+                                });
                             });
-                        });
+                        }
                     });
                 }
 
