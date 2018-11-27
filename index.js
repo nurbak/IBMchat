@@ -224,6 +224,10 @@ io.sockets.on('connection', function (socket) {
 
                     var SQL1 = "SELECT PASSWORT FROM Passwort WHERE UNAME= '" + data + "'";
                     db.open(connStr, function (err, conn) {
+                        if (err) {
+                            return console.log(err);
+                        }
+
                         conn.query(SQL1, function (err, passw) {
                             if (err) {
                                 console.log(err);
@@ -237,26 +241,26 @@ io.sockets.on('connection', function (socket) {
                                     }
 
                                 } else {
-                                  //  db.open(connStr, function (err, conn) {
-                                        //if (err) return console.log(err);
+                                   db.open(connStr, function (err, conn) {
+                                                    if (err) return console.log(err);
 
-                                        var sql = "INSERT INTO PASSWORT (UNAME, PASSWORT) VALUES ('" + data + "', '" + hashed + "')";
-                                        console.log(sql);
+                                                    var sql = "INSERT INTO PASSWORT (UNAME, PASSWORT) VALUES ('" + data + "', '" + hashed + "')";
+                                                    console.log(sql);
 
-                                        conn.query(sql, function (err, data) {
-                                            if (err) console.log(err);
-                                            else console.log(data);
+                                                    conn.query(sql, function (err, data) {
+                                                        if (err) console.log(err);
+                                                        else console.log(data);
 
-                                            //conn.close(function () {
-                                               // console.log('done');
-                                              //  temp = true;
-                                            //});
+                                                        conn.close(function () {
+                                                            console.log('done1');
+                                                temp = true;
+                                            });
                                         });
-                                   // });
+                                    });
                                 }
                             }
                             conn.close(function () {
-                                console.log('done');
+                                console.log('done2');
                                 temp = true;
                             });
                         });
