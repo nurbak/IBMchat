@@ -1,9 +1,9 @@
 //Nur Bakan 761313, Lucas Lawitschka 762365
 
-var express = require('express'), app=express();
+var express = require('express'), app = express();
 var server = require('http').createServer(app);
 var io = require('socket.io').listen(server);
-var db = require( 'ibm_db' );
+var db = require('ibm_db');
 var md5 = require('md5');
 var fs = require('fs');
 var async = require('async');
@@ -11,7 +11,7 @@ app.enable('trust proxy');
 var uuid = require('uuid');
 var os = require('os');
 var VisualRecognitionV3 = require('watson-developer-cloud/visual-recognition/v3');
-var validPic= false;
+var validPic = false;
 //ibm
 var connStr = 'DRIVER={DB2};' +
     'HOSTNAME=dashdb-txn-sbox-yp-lon02-01.services.eu-gb.bluemix.net;' +
@@ -45,7 +45,7 @@ var visualRecognition = new VisualRecognitionV3({
 });
 
 //Redirecting to https if not secure
-app.use (function (req, res, next) {
+app.use(function (req, res, next) {
     if (req.secure || process.env.BLUEMIX_REGION === undefined) {
         next();
     } else {
@@ -56,8 +56,8 @@ app.use (function (req, res, next) {
 
 jdbc:db2://dashdb-txn-sbox-yp-lo
 //All username of the connected users
-var usernames= {};
-var moods= {};
+    var usernames = {};
+var moods = {};
 
 //Direction where it starts to search for a file
 var publicDir = require('path').join(__dirname);
@@ -65,16 +65,16 @@ app.use(express.static(publicDir));
 app.use(bodyParser.json());
 
 //multer for multimedia upload
-const multer= require('multer');
+const multer = require('multer');
 var path = require('path');
 
 //Option where the uploaded files will be saved and with what name
 var storageOptions = multer.diskStorage({
-    destination: function(req, file, callback) {
+    destination: function (req, file, callback) {
         callback(null, 'public/uploads');
     },
 
-    filename: function(req, file, callback) {
+    filename: function (req, file, callback) {
         var fname = file.fieldname + '-' + Date.now() + path.extname(file.originalname);
 
         callback(null, fname);
@@ -83,13 +83,13 @@ var storageOptions = multer.diskStorage({
 });
 
 //complete multer var for the upload
-var upload = multer({storage : storageOptions});
+var upload = multer({storage: storageOptions});
 
 
 /**
  * when a user conntects to the server it will direct him to the index.html.
  */
-app.get('/', function(req, res){
+app.get('/', function (req, res) {
     res.sendFile(__dirname + '/index.html');
 });
 
@@ -101,9 +101,9 @@ app.get('/', function(req, res){
  * to the user he wants it to whisper to.
  * @param req stores the information of the file.
  */
-app.post('/upload', upload.any(), function upload(req, res, next){
-    var ending = (req.files[0].path).split(".")[(req.files[0].path).split(".").length-1];
-    if(req.body.selectall === "1. Send it to everyone") {
+app.post('/upload', upload.any(), function upload(req, res, next) {
+    var ending = (req.files[0].path).split(".")[(req.files[0].path).split(".").length - 1];
+    if (req.body.selectall === "1. Send it to everyone") {
         if (ending === "jpg" || ending === "jepg" || ending === "png")
             io.sockets.emit('img upload', {file: req.files[0].path})
         if (ending === "mp4")
@@ -111,13 +111,13 @@ app.post('/upload', upload.any(), function upload(req, res, next){
         if (ending === "mp3" || ending === "mpeg")
             io.sockets.emit('sound upload', {file: req.files[0].path})
     }
-    else{
+    else {
         var name = req.body.selectall.substr(req.body.selectall.indexOf(" "));
         name = name.trim();
 
         console.log(name);
 
-        if(name in usernames){
+        if (name in usernames) {
             if (ending === "jpg" || ending === "jepg" || ending === "png")
                 usernames[name].emit('img upload', {file: req.files[0].path});
             if (ending === "mp4")
@@ -129,18 +129,15 @@ app.post('/upload', upload.any(), function upload(req, res, next){
 });
 
 
-
 //Its the port. You can access the server on port 3000.
 server.listen(process.env.PORT || 3000);
 console.log('Server running...');
 
 
-
-
 /**
  * Function is called when someone connects with the Server
  */
-io.sockets.on('connection', function(socket){
+io.sockets.on('connection', function (socket) {
     console.log('Socket Connected...');
 
     /**
@@ -153,33 +150,33 @@ io.sockets.on('connection', function(socket){
      *
      *    @param data stores the message. "/w " to whisper. "/list" to open the list. "/listoff" to close the list.
      */
-    socket.on('send message', function(data,callback){
-        var msg= data.trim();
-        if(msg.substr(0,3)=== '/w '){
-            msg= msg.substr(3);
-            var ind= msg.indexOf(' ');
+    socket.on('send message', function (data, callback) {
+        var msg = data.trim();
+        if (msg.substr(0, 3) === '/w ') {
+            msg = msg.substr(3);
+            var ind = msg.indexOf(' ');
             console.log(ind);
-            if(ind !== -1){
-                var name= msg.substr(0,ind);
-                var msg= msg.substr(ind+1);
+            if (ind !== -1) {
+                var name = msg.substr(0, ind);
+                var msg = msg.substr(ind + 1);
 
-                if(name in usernames){
-                    usernames[name].emit('whisper',{msg: msg, user: socket.username});
+                if (name in usernames) {
+                    usernames[name].emit('whisper', {msg: msg, user: socket.username});
                     console.log('private');
-                }else{
+                } else {
                     callback('Error enter a valid user!');
                 }
-            }else{
+            } else {
                 callback('Error please enter a message for your whisper.')
             }
 
-        }else if(msg === '/list'){
+        } else if (msg === '/list') {
             socket.emit('liston');
 
-        }else if(msg === '/listoff') {
+        } else if (msg === '/listoff') {
             socket.emit('listoff');
         }
-        else{
+        else {
 
 
             var toneParams = {
@@ -199,11 +196,10 @@ io.sockets.on('connection', function(socket){
                     }
                 }
             });
-            io.sockets.emit('new message',{msg: msg, user: socket.username});
+            io.sockets.emit('new message', {msg: msg, user: socket.username});
         }
 
     });
-
 
 
     /**
@@ -212,55 +208,81 @@ io.sockets.on('connection', function(socket){
      *  by updating the username-list.
      *  @param data stores the username.
      */
-    socket.on('new user', function(data, pw, pic, callback){
-       // var regexp = /[a-zA-Z]/gi;
+    socket.on('new user', function (data, pw, pic, callback) {
+        // var regexp = /[a-zA-Z]/gi;
         var regexp2 = /\W/;
-        let hashed = md5(pw); //34feb914c099df25794bf9ccb85bea72
+        let hashed = md5(pw);
+        var temp = false;
+
+        detectFace(pic).then((result) => {
+            if (validPic) {
 
 
-       detectFace(pic).then((result)=>{
-           if(validPic) {
+                if (data in usernames || (regexp2.test(data))) {
+                    callback(false);
+                } else {
 
-               if(data in usernames || (regexp2.test(data))){
-                   callback(false);
-               }else{
+                    var SQL1 = "SELECT PASSWORT FROM Passwort WHERE UNAME= '" + data + "'";
+                    db.open(connStr, function (err, conn) {
+                        conn.query(SQL1, function (err, passw) {
+                            if (err) {
+                                console.log(err);
+                            }
+                            else {
+                                if (user.length > 0) {
+                                    if (hashed == passw) {
+                                        temp = true;
+                                    } else {
+                                        callback(false);
+                                    }
 
-                   callback(true);
-                   socket.username = data;
-                   socket.passwort = hashed;
-                   socket.pic = pic;
-                   socket.mood = "Normal    ";
-                   usernames[socket.username] = socket;
-                   io.sockets.emit('user connect', data);
-                   updateUsernames();
+                                } else {
+                                  //  db.open(connStr, function (err, conn) {
+                                        //if (err) return console.log(err);
 
-                   db.open(connStr, function (err,conn) {
-                       if (err) return console.log(err);
+                                        var sql = "INSERT INTO PASSWORT (UNAME, PASSWORT) VALUES ('" + data + "', '" + hashed + "')";
+                                        console.log(sql);
 
-                       var sql = "INSERT INTO PASSWORT (UNAME, PASSWORT) VALUES ('"+socket.username +"', '"+ socket.passwort + "')";
-                       console.log(sql);
+                                        conn.query(sql, function (err, data) {
+                                            if (err) console.log(err);
+                                            else console.log(data);
 
-                       conn.query(sql, function (err, data) {
-                           if (err) console.log(err);
-                           else console.log(data);
+                                            //conn.close(function () {
+                                               // console.log('done');
+                                              //  temp = true;
+                                            //});
+                                        });
+                                   // });
+                                }
+                            }
+                            conn.close(function () {
+                                console.log('done');
+                                temp = true;
+                            });
+                        });
+                    });
 
-                           conn.close(function () {
-                               console.log('done');
-                           });
-                       });
-                   });
+                    if (temp) {
+                        callback(true);
+                        socket.username = data;
+                        socket.passwort = hashed;
+                        socket.pic = pic;
+                        socket.mood = "Normal     ";
+                        usernames[socket.username] = socket;
+                        io.sockets.emit('user connect', data);
+                        updateUsernames();
+                    }
+                }
 
-               }
+            }
+            else {
+                callback(false);
+            }
 
-           }
-           else{
-               callback(false);
-           }
-
-       })
-           .catch((error) =>
-               callback(false)
-           );
+        })
+            .catch((error) =>
+                callback(false)
+            );
 
 
     });
@@ -272,7 +294,7 @@ io.sockets.on('connection', function(socket){
      */
     socket.on('disconnect', function () {
         console.log(socket.username + " wants to leave");
-        if(!socket.username) {
+        if (!socket.username) {
             return;
         }
         io.sockets.emit('user disconnect', socket.username);
@@ -280,17 +302,17 @@ io.sockets.on('connection', function(socket){
         updateUsernames();
     })
 
-    socket.on('moods', function(data){
-        socket.mood =data;
+    socket.on('moods', function (data) {
+        socket.mood = data;
         updateUsernames();
     });
 
     /**
      * Updates the username list after someone connects to or disconnects from the chat.
      */
-    function updateUsernames(){
-        let moods= {};
-        let pics= {};
+    function updateUsernames() {
+        let moods = {};
+        let pics = {};
         let i = 0;
         for (let name in usernames) {
             moods[i] = usernames[name].mood;
