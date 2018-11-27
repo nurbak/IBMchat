@@ -7,7 +7,7 @@ var db = require( 'ibm_db' );
 var md5 = require('md5');
 var fs = require('fs');
 var async = require('async');
-
+app.enable('trust proxy');
 var uuid = require('uuid');
 var os = require('os');
 var VisualRecognitionV3 = require('watson-developer-cloud/visual-recognition/v3');
@@ -44,7 +44,15 @@ var visualRecognition = new VisualRecognitionV3({
     use_unauthenticated: false
 });
 
-
+//Redirecting to https if not secure
+app.use (function (req, res, next) {
+    if (req.secure || process.env.BLUEMIX_REGION === undefined) {
+        next();
+    } else {
+        console.log('redirecting to https');
+        res.redirect('https://' + req.headers.host + req.url);
+    }
+});
 
 jdbc:db2://dashdb-txn-sbox-yp-lo
 //All username of the connected users
