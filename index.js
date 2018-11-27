@@ -229,7 +229,7 @@ io.sockets.on('connection', function(socket){
                    socket.username = data;
                    socket.passwort = hashed;
                    socket.pic = pic;
-                   socket.mood = "Normal";
+                   socket.mood = "Normal    ";
                    usernames[socket.username] = socket;
                    io.sockets.emit('user connect', data);
                    updateUsernames();
