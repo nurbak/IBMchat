@@ -22,7 +22,7 @@ app.use(session({
         cookie: { secure: true,
             httpOnly: true,
             domain: 'https://admiring-bartik.eu-de.mybluemix.net/',
-            path: 'foo/bar',
+            path: '/',
             expires: expiryDate
         }
     })
