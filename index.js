@@ -28,6 +28,10 @@ app.use(session({
     })
 );
 
+//header helmet fehler
+var helmet = require('helmet');
+app.use(helmet());
+
 
 //ibm
 var connStr = 'DRIVER={DB2};' +
