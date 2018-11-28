@@ -12,6 +12,23 @@ var uuid = require('uuid');
 var os = require('os');
 var VisualRecognitionV3 = require('watson-developer-cloud/visual-recognition/v3');
 var validPic = false;
+
+//Cookie fehlerbehung
+var session = require('cookie-session');
+var expiryDate = new Date( Date.now() + 60 * 60 * 1000 ); // 1 hour
+app.use(session({
+        name: 'session',
+        keys: ['key1', 'key2'],
+        cookie: { secure: true,
+            httpOnly: true,
+            domain: 'example.com',
+            path: 'foo/bar',
+            expires: expiryDate
+        }
+    })
+);
+
+
 //ibm
 var connStr = 'DRIVER={DB2};' +
     'HOSTNAME=dashdb-txn-sbox-yp-lon02-01.services.eu-gb.bluemix.net;' +
