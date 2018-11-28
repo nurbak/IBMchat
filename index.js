@@ -30,6 +30,10 @@ app.use(session({
 var helmet = require('helmet');
 app.use(helmet());
 
+//xss Protection Fehler
+var xssFilter = require('x-xss-protection');
+app.use(xssFilter({ setOnOldIE: true }));
+
 
 
 //ibm
