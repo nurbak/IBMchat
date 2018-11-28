@@ -41,14 +41,8 @@ app.use(helmet.hsts({
 var xssFilter = require('x-xss-protection');
 app.use(xssFilter({ setOnOldIE: true }));
 
-//content
-app.use(helmet.contentSecurityPolicy({
-    directives: {
-        defaultSrc: ["'self'"],
-        styleSrc: ["'self'", 'https://admiring-bartik.eu-de.mybluemix.net/']
-    }
-}));
 
+s
 
 
 //ibm
