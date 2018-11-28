@@ -36,7 +36,6 @@ app.use(helmet());
 //header scripts content security
 app.use(helmet.contentSecurityPolicy({
     directives: {
-        defaultSrc: ["'self'"],
         scriptSrc: ["'self'", 'http://code.jquery.com/jquery-latest.min.js', '/socket.io/socket.io.js',
             '//ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js',
             'https://cdnjs.cloudflare.com/ajax/libs/materialize/0.100.2/js/materialize.min.js']
