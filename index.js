@@ -6,7 +6,6 @@ var io = require('socket.io').listen(server);
 var db = require('ibm_db');
 var md5 = require('md5');
 var fs = require('fs');
-var async = require('async');
 app.enable('trust proxy');
 var VisualRecognitionV3 = require('watson-developer-cloud/visual-recognition/v3');
 var validPic = false;
@@ -32,7 +31,7 @@ var helmet = require('helmet');
 app.use(helmet());
 
 // Sets "Strict-Transport-Security: max-age=5184000; includeSubDomains".
-const sixtyDaysInSeconds = 5184000
+const sixtyDaysInSeconds = 15768001
 app.use(helmet.hsts({
     maxAge: sixtyDaysInSeconds
 }))
