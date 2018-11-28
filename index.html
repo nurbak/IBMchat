@@ -1,7 +1,6 @@
 <!doctype html>
-<!-- Nur Bakan 761313, Lucas Lawitschka 762365  -->
 <head>
-    <title>Socket.IO chat from Nur Bakan and Lucas Lawitschka</title>
+    <title>Socket.IO chat from Nur Bakan 761313 and Lucas Lawitschka 762365</title>
 
     <style>
         body{
@@ -74,11 +73,6 @@
     </style>
 </head>
 <body>
-
-<!--
-Login-form for the user to login. It requires a username. If submit is pressed it calls its function
-to check the name and to connect the user to the chat. It will disappear after connecting to the chat area.
--->
 <div id="container">
     <div id="namesWraper">
         <p>Create username:</p>
@@ -93,10 +87,6 @@ to check the name and to connect the user to the chat. It will disappear after c
         <img src="#" id="profilpic" width='160' height='120' hidden>
     </div>
 
-    <!--
-    Chat area. The user has a chat-form where he can either send a message, a private message or request a list of
-    all connected users.
-    -->
     <div id="mainWraper">
         <div id="chatWraper" >
             <form id="messageForm">
@@ -107,17 +97,10 @@ to check the name and to connect the user to the chat. It will disappear after c
             </div>
         </div>
 
-        <!--
-        its for the list of all users. He can request it by choice ("/list", "/listoff")
-        -->
         <div id="userWraper">
             <div id="users"></div>
         </div>
 
-        <!--
-        Its for uploading and sharing a multimedia file. The user needs to choose the file and to press submit to confirm
-        the upload. He can choose a user he wants to send it to.
-        -->
         <div id="upload">
             <form id="UploadForm" action="/upload" method="POST" enctype="multipart/form-data">
                 <select name="selectall" id="selectall"></select>
@@ -125,12 +108,6 @@ to check the name and to connect the user to the chat. It will disappear after c
                 <input type="submit" value="Upload">
             </form>
         </div>
-
-
-        <!--
-        It's a list for all the commands the chat server can handle.
-        -->
-
     </div>
 
 </div>

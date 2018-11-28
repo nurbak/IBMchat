@@ -33,6 +33,17 @@ var helmet = require('helmet');
 app.use(helmet());
 
 
+//header scripts content security
+app.use(helmet.contentSecurityPolicy({
+    directives: {
+        defaultSrc: ["'self'"],
+        styleSrc: ["'self'", 'maxcdn.bootstrapcdn.com', 'http://code.jquery.com/jquery-latest.min.js', '/socket.io/socket.io.js',
+            '//ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js',
+            'https://cdnjs.cloudflare.com/ajax/libs/materialize/0.100.2/js/materialize.min.js']
+    }
+}))
+
+
 //ibm
 var connStr = 'DRIVER={DB2};' +
     'HOSTNAME=dashdb-txn-sbox-yp-lon02-01.services.eu-gb.bluemix.net;' +
