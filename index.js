@@ -8,8 +8,6 @@ var md5 = require('md5');
 var fs = require('fs');
 var async = require('async');
 app.enable('trust proxy');
-var uuid = require('uuid');
-var os = require('os');
 var VisualRecognitionV3 = require('watson-developer-cloud/visual-recognition/v3');
 var validPic = false;
 
@@ -32,15 +30,6 @@ app.use(session({
 var helmet = require('helmet');
 app.use(helmet());
 
-
-//header scripts content security
-app.use(helmet.contentSecurityPolicy({
-    directives: {
-        scriptSrc: ["'self'", 'http://code.jquery.com/jquery-latest.min.js', '/socket.io/socket.io.js',
-            '//ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js',
-            'https://cdnjs.cloudflare.com/ajax/libs/materialize/0.100.2/js/materialize.min.js']
-    }
-}))
 
 
 //ibm
