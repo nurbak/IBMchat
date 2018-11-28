@@ -15,6 +15,7 @@ var validPic = false;
 var session = require('cookie-session');
 var expiryDate = new Date( Date.now() + 60 * 60 * 1000 ); // 1 hour
 app.use(session({
+        secret : 's3Cur3',
         name: 'session',
         keys: ['key1', 'key2'],
         cookie: { secure: true,
@@ -39,6 +40,14 @@ app.use(helmet.hsts({
 //xss Protection Fehler
 var xssFilter = require('x-xss-protection');
 app.use(xssFilter({ setOnOldIE: true }));
+
+//content
+app.use(helmet.contentSecurityPolicy({
+    directives: {
+        defaultSrc: ["'self'"],
+        styleSrc: ["'self'", 'https://admiring-bartik.eu-de.mybluemix.net/']
+    }
+}));
 
 
 
@@ -77,18 +86,17 @@ var visualRecognition = new VisualRecognitionV3({
 //Redirecting to https if not secure
 app.use(function (req, res, next) {
     if (req.secure || process.env.BLUEMIX_REGION === undefined) {
+       //cros fehler
         // Website you wish to allow to connect
         res.setHeader('Access-Control-Allow-Origin', 'http://localhost:3000');
-
         // Request methods you wish to allow
         res.setHeader('Access-Control-Allow-Methods', 'GET, POST');
-
         // Request headers you wish to allow
         res.setHeader('Access-Control-Allow-Headers', 'X-Requested-With,content-type');
-
         // Set to true if you need the website to include cookies in the requests sent
         // to the API (e.g. in case you use sessions)
         res.setHeader('Access-Control-Allow-Credentials', true);
+
         next();
     } else {
         console.log('redirecting to https');
