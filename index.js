@@ -42,7 +42,6 @@ var xssFilter = require('x-xss-protection');
 app.use(xssFilter({ setOnOldIE: true }));
 
 
-s
 
 
 //ibm
