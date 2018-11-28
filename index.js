@@ -418,29 +418,18 @@ io.sockets.on('connection', function (socket) {
             var temp = path.join('public/uploads/' + img);
             params.images_file = fs.createReadStream(temp);
 
-            var methods = [];
             params.threshold = 0.5; //So the classifers only show images with a confindence level of 0.5 or higher
-            methods.push('detectFaces');
-            async.parallel(methods.map(function (method) {
-                var fn = visualRecognition[method].bind(visualRecognition, params);
-                return async.reflect(async.timeout(fn, 40000));
-            }), function (err, results) {
-                // combine the results
-                results.map(function (result) {
-                    if (result.value && result.value.length) {
-                        result.value = result.value[0];
-                    }
-                    if (result.value["images"][0]["faces"].length > 0) {
-                        validPic = true;
-                        console.log("GESICHT");
-                        resolve(true);
-                    } else {
-                        validPic = false;
-                        console.log("KEIN GESICHT!");
-                        reject(false);
-                    }
-                    return result;
-                })
+            visualRecognition.detectFaces(params,function (err,response) {
+                if (response.value && response.value.length) {
+                    response.value = response.value[0];
+                }
+                if(response["images"][0]["faces"].length>0){
+                    validPic=true;
+                    resolve(true);
+                }else{
+                    reject(false);
+                }
+                return response;
             });
         });
     }
