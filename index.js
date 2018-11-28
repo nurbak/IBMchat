@@ -21,7 +21,7 @@ app.use(session({
         keys: ['key1', 'key2'],
         cookie: { secure: true,
             httpOnly: true,
-            domain: 'https://admiring-bartik.eu-de.mybluemix.net/',
+            domain: 'admiring-bartik.eu-de.mybluemix.net',
             path: '/',
             expires: expiryDate
         }
