@@ -19,7 +19,7 @@ io.adapter(adap({pubClient: publ, subClient: subm}));
 
 
 //cluster process id
-//const pid = process.pid;
+const pid = process.pid;
 
 //Cookie fehlerbehung
 var session = require('cookie-session');
