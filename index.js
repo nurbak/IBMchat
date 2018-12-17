@@ -9,7 +9,13 @@ var fs = require('fs');
 app.enable('trust proxy');
 var VisualRecognitionV3 = require('watson-developer-cloud/visual-recognition/v3');
 var validPic = false;
+var red = require('redis');
+var adap = require('socket.io-redis');
 
+var publ = red.createClient('16178', 'redis-16178.c135.eu-central-1-1.ec2.cloud.redislabs.com', { auth_pass: "Nrmd7VaaUOefQCqxiaubbMskHiGlGkCg"} );
+var subm = red.createClient('16178', 'redis-16178.c135.eu-central-1-1.ec2.cloud.redislabs.com', { auth_pass: "Nrmd7VaaUOefQCqxiaubbMskHiGlGkCg"} );
+
+io.adapter(adap({pubClient: publ, subClient: subm}));
 
 
 //cluster process id
