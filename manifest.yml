@@ -2,4 +2,4 @@
 applications:
 - name: admiring-bartik
   memory: 512M
-  instances: 1
+  instances: 2

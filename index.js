@@ -10,6 +10,11 @@ app.enable('trust proxy');
 var VisualRecognitionV3 = require('watson-developer-cloud/visual-recognition/v3');
 var validPic = false;
 
+
+
+//cluster process id
+//const pid = process.pid;
+
 //Cookie fehlerbehung
 var session = require('cookie-session');
 var expiryDate = new Date( Date.now() + 60 * 60 * 1000 ); // 1 hour
@@ -25,6 +30,7 @@ app.use(session({
         }
     })
 );
+
 
 //header helmet fehler
 var helmet = require('helmet');
@@ -78,7 +84,7 @@ var visualRecognition = new VisualRecognitionV3({
 //Redirecting to https if not secure
 app.use(function (req, res, next) {
     if (req.secure || process.env.BLUEMIX_REGION === undefined) {
-       //cros fehler
+       //cors fehler
         // Website you wish to allow to connect
         res.setHeader('Access-Control-Allow-Origin', 'https://admiring-bartik.eu-de.mybluemix.net/');
         // Request methods you wish to allow
@@ -172,7 +178,9 @@ app.post('/upload', upload.any(), function upload(req, res, next) {
 
 
 //Its the port. You can access the server on port 3000.
-server.listen(process.env.PORT || 3000);
+server.listen(process.env.PORT || 3000, ()=> {
+    console.log(`Started process ${pid}`) //cluster process id
+});
 console.log('Server running...');
 
 
