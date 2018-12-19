@@ -4,7 +4,10 @@ var express = require('express'), app = express();
 var server = require('http').createServer(app);
 var io = require('socket.io').listen(server);
 var db = require('ibm_db');
-var md5 = require('md5');
+
+const bcrypt = require('bcrypt');
+const saltRounds = 10;
+
 var fs = require('fs');
 app.enable('trust proxy');
 var VisualRecognitionV3 = require('watson-developer-cloud/visual-recognition/v3');
@@ -12,8 +15,8 @@ var validPic = false;
 var red = require('redis');
 var adap = require('socket.io-redis');
 
-var publ = red.createClient('16178', 'redis-16178.c135.eu-central-1-1.ec2.cloud.redislabs.com', { auth_pass: "Nrmd7VaaUOefQCqxiaubbMskHiGlGkCg"} );
-var subm = red.createClient('16178', 'redis-16178.c135.eu-central-1-1.ec2.cloud.redislabs.com', { auth_pass: "Nrmd7VaaUOefQCqxiaubbMskHiGlGkCg"} );
+var publ = red.createClient('16178', 'redis-16178.c135.eu-central-1-1.ec2.cloud.redislabs.com', {auth_pass: "Nrmd7VaaUOefQCqxiaubbMskHiGlGkCg"});
+var subm = red.createClient('16178', 'redis-16178.c135.eu-central-1-1.ec2.cloud.redislabs.com', {auth_pass: "Nrmd7VaaUOefQCqxiaubbMskHiGlGkCg"});
 
 io.adapter(adap({pubClient: publ, subClient: subm}));
 
@@ -23,12 +26,13 @@ const pid = process.pid;
 
 //Cookie fehlerbehung
 var session = require('cookie-session');
-var expiryDate = new Date( Date.now() + 60 * 60 * 1000 ); // 1 hour
+var expiryDate = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
 app.use(session({
-        secret : 's3Cur3',
+        secret: 's3Cur3',
         name: 'session',
         keys: ['key1', 'key2'],
-        cookie: { secure: true,
+        cookie: {
+            secure: true,
             httpOnly: true,
             domain: 'admiring-bartik.eu-de.mybluemix.net',
             path: '/',
@@ -50,9 +54,7 @@ app.use(helmet.hsts({
 
 //xss Protection Fehler
 var xssFilter = require('x-xss-protection');
-app.use(xssFilter({ setOnOldIE: true }));
-
-
+app.use(xssFilter({setOnOldIE: true}));
 
 
 //ibm
@@ -90,7 +92,7 @@ var visualRecognition = new VisualRecognitionV3({
 //Redirecting to https if not secure
 app.use(function (req, res, next) {
     if (req.secure || process.env.BLUEMIX_REGION === undefined) {
-       //cors fehler
+        //cors fehler
         // Website you wish to allow to connect
         res.setHeader('Access-Control-Allow-Origin', 'https://admiring-bartik.eu-de.mybluemix.net/');
         // Request methods you wish to allow
@@ -184,7 +186,7 @@ app.post('/upload', upload.any(), function upload(req, res, next) {
 
 
 //Its the port. You can access the server on port 3000.
-server.listen(process.env.PORT || 3000, ()=> {
+server.listen(process.env.PORT || 3000, () => {
     console.log(`Started process ${pid}`) //cluster process id
 });
 console.log('Server running...');
@@ -267,9 +269,16 @@ io.sockets.on('connection', function (socket) {
     socket.on('new user', function (data, pw, pic, callback) {
         // var regexp = /[a-zA-Z]/gi;
         var regexp2 = /\W/;
-        let hashed = md5(pw);
+        //let hashed = crypto.createHmac('sha256', 'chatKey').update(pw).digest('hex');
+        let hashed = "";
+
+
         var temp = false;
         var anlegen = false;
+
+        bcrypt.hash(pw, saltRounds, function (err, hash) {
+            hashed = hash;
+        });
 
         detectFace(pic).then((result) => {
             if (validPic) {
@@ -279,7 +288,7 @@ io.sockets.on('connection', function (socket) {
                     callback(false);
                 } else {
 
-                    var SQL1 = "SELECT PASSWORT FROM PASSWORT WHERE UNAME= '" + data + "'";
+                    var SQL1 = "SELECT * FROM PASSWORT WHERE UNAME= '" + data + "'";
                     db.open(connStr, function (err, conn) {
                         if (err) {
                             console.log('err1');
@@ -293,41 +302,28 @@ io.sockets.on('connection', function (socket) {
                                 }
                                 else {
                                     if (passw.length > 0) {
+                                        let stringedPW = JSON.stringify(passw).split('"')[7];
 
-                                        var SQL2 = "SELECT * FROM PASSWORT WHERE UNAME= '" + data + "' AND PASSWORT='" + hashed + "'";
-                                        db.open(connStr, function (err, conn) {
-                                            if (err) {
-                                                console.log('err1');
-                                                callback(false);
-                                            } else {
-                                                conn.query(SQL2, function (err, user) {
-                                                    if (err) {
-                                                        console.log('err2');
-                                                        callback(false);
-                                                    }
-                                                    else {
-                                                        if (user.length > 0) {
-                                                            callback(true);
-                                                            socket.username = data;
-                                                            socket.passwort = hashed;
-                                                            socket.pic = pic;
-                                                            socket.mood = "Normal     ";
-                                                            usernames[socket.username] = socket;
-                                                            io.sockets.emit('user connect', data);
-                                                            updateUsernames();
-                                                        }
-                                                        else{
-                                                            console.log('err2');
-                                                            callback(false);
-                                                        }
-                                                    }
-                                                    conn.close(function () {
-                                                        console.log('done3');
-                                                        temp = true;
-                                                    });
-                                                });
-
+                                        bcrypt.compare(pw, stringedPW, function (err, res) {
+                                            if (res) {
+                                                callback(true);
+                                                socket.username = data;
+                                                socket.passwort = stringedPW;
+                                                socket.pic = pic;
+                                                socket.mood = "Normal     ";
+                                                usernames[socket.username] = socket;
+                                                io.sockets.emit('user connect', data);
+                                                updateUsernames();
                                             }
+                                            else {
+                                                console.log('err2');
+                                                callback(false);
+                                            }
+                                        });
+
+                                        conn.close(function () {
+                                            console.log('done3');
+                                            temp = true;
                                         });
                                     } else {
                                         db.open(connStr, function (err, conn) {
@@ -335,7 +331,6 @@ io.sockets.on('connection', function (socket) {
                                                 console.log('err3');
                                                 callback(false);
                                             } else {
-
                                                 var sql = "INSERT INTO PASSWORT (UNAME, PASSWORT) VALUES ('" + data + "', '" + hashed + "')";
                                                 console.log(sql);
 
@@ -432,14 +427,14 @@ io.sockets.on('connection', function (socket) {
             params.images_file = fs.createReadStream(temp);
 
             params.threshold = 0.5; //So the classifers only show images with a confindence level of 0.5 or higher
-            visualRecognition.detectFaces(params,function (err,response) {
+            visualRecognition.detectFaces(params, function (err, response) {
                 if (response.value && response.value.length) {
                     response.value = response.value[0];
                 }
-                if(response["images"][0]["faces"].length>0){
-                    validPic=true;
+                if (response["images"][0]["faces"].length > 0) {
+                    validPic = true;
                     resolve(true);
-                }else{
+                } else {
                     reject(false);
                 }
                 return response;
